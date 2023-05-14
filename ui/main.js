@@ -1,4 +1,5 @@
-    
+var socket = io.connect();
+
 // var username = document.getElementById('usernameinput').value;
 var publicjoinbtn = document.getElementById("publicjoinbtn");
 publicjoinbtn.onclick = function() {
@@ -6,20 +7,16 @@ publicjoinbtn.onclick = function() {
     publicjoinbtn.classList.remove('btn-warning');
     publicjoinbtn.classList.add('btn-secondary');
     publicjoinbtn.style.width = "auto";
-    var socket = io.connect('https://chain-reaction-kappa.vercel.app/');
-    var userid;
-    socket.on('connect', () => {
-        userid = socket.id;
-        console.log(userid);
-        publicjoinbtn.value = "Joining queue...";
-        socket.emit('enqueue', {userid: userid});
-        publicjoinbtn.value = "Waiting for players...";
-        socket.on('game_code', function(data) {
-            console.log(data);
-            var game_code = data.game_code;
-            document.cookie = "userid="+userid+";";
-            window.location = "./g/"+game_code;
-        });
+    var userid = socket.id;
+    console.log(userid);
+    publicjoinbtn.value = "Joining queue...";
+    socket.emit('enqueue', {userid: userid});
+    publicjoinbtn.value = "Waiting for players...";
+    socket.on('game_code', function(data) {
+        console.log(data);
+        var game_code = data.game_code;
+        document.cookie = "userid="+userid+";";
+        window.location = "./g/"+game_code;
     });
 };
 
