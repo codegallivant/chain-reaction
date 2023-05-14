@@ -1,0 +1,272 @@
+<html>
+  <head>
+    
+    <title>Chain Reaction</title>
+    <link rel="icon" href="/ui/favicon.ico" type="image/png" />
+
+    <script src="/ui/pace/pace-1.0.2/pace.js"></script>
+    <link href="/ui/pace/pace-1.0.2/themes/blue/pace-theme-flash.css" rel="stylesheet" />
+    <script>
+        paceOptions = {
+          ajax: false, // disabled
+          document: false, // disabled
+          eventLag: false, // disabled
+          restartOnRequestAfter: false, // disabled
+          elements: {
+          
+          }
+        };
+    </script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css" rel="stylesheet">
+    <script src="/ui/wow.min.js"></script>
+        <script>
+            wow = new WOW(
+               {
+               boxClass:     'wow',      // default
+               animateClass: 'animated', // default
+               offset:       2,          // default was 0
+               mobile:       false,       // default
+               live:         true        // default
+             });
+            wow.init();
+    </script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"> 
+    <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+   
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.6.0/lib/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.js"></script>
+
+    <style>
+      html, body {
+          height: 100%;
+          margin: 0;
+          background: black;
+      }
+      #statusbar {
+        font-family: "Montserrat";
+        width: 100vw;
+        color: white;
+        background: #36393e;
+        font-size: 2vh;
+        height: 3%;
+        padding-left: 1%;
+        position: sticky;
+      }
+      #gamecanvas {
+/*      display:block;*/
+        min-height: 98%;
+/*        position: relative;*/
+/*        top: 50%;*/
+/*        transform: translateY(-50%);*/
+      }
+    </style>
+
+    <script>
+      var newModal = function(title, body, footer, size) {
+          document.getElementById("modalTitle").innerHTML = title;
+          document.getElementById('modalBody').innerHTML = body;
+          document.getElementById('modalFooter').innerHTML = footer;
+          /*Sizes:
+              <nothing> = normal
+              sm = small
+              lg = large
+              xl = extra large
+              fullscreen = fullscreen
+          */
+          if(size!=="") {
+              document.getElementById("modalDialog").className="modal-dialog modal-"+size; 
+          } else {
+              document.getElementById("modalDialog").className="modal-dialog"; 
+          }
+          var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
+              backdrop: false,
+              focus: false
+          });
+          return myModal;
+      }
+      var gameResultsModal = function(content) {
+          newModal("Game results", content, "", "sm").toggle();
+        }
+
+      var timer;
+      var timerSetInterval;
+      function startTimer(duration, display) {
+        console.log("timer started")
+          timer = duration;
+          var minutes, seconds;
+          // var timer = duration, minutes, seconds;
+          timerSetInterval = setInterval(function () {
+              minutes = parseInt(timer / 60, 10);
+              seconds = parseInt(timer % 60, 10);
+
+              minutes = minutes < 10 ? "0" + minutes : minutes;
+              seconds = seconds < 10 ? "0" + seconds : seconds;
+
+              display.textContent = minutes + ":" + seconds;
+
+              if (--timer < 0) {
+                  timer = duration;
+              }
+          }, 1000);
+      }
+
+      function resetTimer() {
+        console.log("timer reset")
+        timer = 45;
+      }
+
+      function stopTimer() {
+        console.log("timer stopped")
+        clearInterval(timerSetInterval);
+      }
+
+      function end(text) {
+        stopTimer();
+        gameResultsModal(text);
+      }
+    </script>
+    </head>
+
+    <script type="text/javascript">
+
+      const getCookieValue = (name) => (
+        document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)')?.pop() || ''
+      );
+      userid = getCookieValue("userid")
+      
+      var game_details;
+      var get_game_details = function() {
+        // return new Promise(function (resolve, reject) {
+          var request = new XMLHttpRequest();
+          request.onreadystatechange = function() {
+              if (request.readyState === XMLHttpRequest.DONE) {
+                  console.log(request.status)
+                  console.log(request.response)
+                  game_details = request.response;
+              }
+          };
+
+          request.open('POST', '/game-details', false);
+          request.setRequestHeader('Content-Type', 'application/json');
+          request.send(JSON.stringify({
+              userid: userid
+          }));
+      };
+      
+      get_game_details();
+      console.log(game_details)
+
+      game_details = JSON.parse(game_details);
+      console.log(game_details)
+      
+      var game_code = game_details.game_code;
+      console.log(game_code)
+
+      var board = game_details.board;
+      console.log(board);
+
+      var thisPlayerNum = game_details.playernum;
+      console.log(thisPlayerNum)
+      
+      var timer = game_details.timer;
+
+
+
+      var socket = io.connect('http://localhost:8080');
+
+      socket.emit('join', {userid: userid});
+
+    </script>
+    
+    <body>
+
+      <div id="statusbar">
+        <p><span id="turn"></span> &nbsp &nbsp &nbsp &nbsp <span id="timer"></span></p>
+      </div>
+
+      <center>      
+        <div id="gamecanvas"></div>
+      </center>
+      <main>
+      </main>
+      <center>   
+         <div class="modal fade" id="myModal" role="dialog" aria-hidden="true" style="height:auto; width:100%; ">
+              <div class="modal-dialog modal-xl" id="modalDialog" role="document">
+                  <div class="modal-content">
+                      <div class="modal-header">
+                          <h5 class="modal-title" id="modalTitle"></h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body" >
+                          <div id="modalBody"></div>
+                      </div>
+                      <div class="modal-footer">
+                          <div id="modalFooter"></div>
+                          <button id="closeModalButton" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Continue</button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </center>     
+      <script>
+        document.getElementById("closeModalButton").onclick = function() {
+          window.location = "/"
+        }
+      </script>
+    </body>
+
+    <script>
+      if(game_details.current_player_num === thisPlayerNum) {
+        document.getElementById("turn").textContent = "YOUR TURN"
+        var disabled = false;
+      } else {
+        document.getElementById("turn").textContent = "OPPONENT'S TURN"
+        var disabled = true;
+      }
+
+      startTimer(timer, document.getElementById("timer"))
+    </script>
+
+    <script src="/ui/game.js"></script>
+    
+    <script>
+      console.log("executing");
+      socket.on('oppMove', function(data) {
+        console.log("opponent move");
+        board = data.board;
+        opponentMove(data.block[0], data.block[1]);
+        console.log("changing text");
+        document.getElementById("turn").textContent = "YOUR TURN";
+        disabled = false;
+        resetTimer()
+        // startTimer(45, document.getElementById("timer"));
+      });
+
+      socket.on("oppDisconnect", function(data) {
+        end("Your opponent disconnected.");
+      });
+
+      socket.on("timewin", function(data) {
+        end("You won by time.");
+      });
+
+      socket.on("timelose", function(data) {
+        end("Time up.");
+      });
+
+      socket.on("lose", function(data) {
+        end("You lost.");
+      });
+
+      socket.on("win", function(data) {
+        end("You won.");
+      });
+        
+    </script>
+
+</html>
