@@ -1,4 +1,4 @@
-var socket = io.connect();
+var socket = io.connect('https://chain-reaction-kappa.vercel.app/');
 
 // var username = document.getElementById('usernameinput').value;
 var publicjoinbtn = document.getElementById("publicjoinbtn");
