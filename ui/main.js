@@ -1,5 +1,6 @@
 var socket = io.connect('https://chain-reaction-kappa.vercel.app/');
-
+socket.on('connect', () => {var userid = socket.id;});
+    
 // var username = document.getElementById('usernameinput').value;
 var publicjoinbtn = document.getElementById("publicjoinbtn");
 publicjoinbtn.onclick = function() {
@@ -7,7 +8,6 @@ publicjoinbtn.onclick = function() {
     publicjoinbtn.classList.remove('btn-warning');
     publicjoinbtn.classList.add('btn-secondary');
     publicjoinbtn.style.width = "auto";
-    var userid = socket.id;
     console.log(userid);
     publicjoinbtn.value = "Joining queue...";
     socket.emit('enqueue', {userid: userid});
