@@ -1,4 +1,4 @@
-var socket = io.connect('http://localhost:8080');
+var socket = io.connect();
 
 // var username = document.getElementById('usernameinput').value;
 var publicjoinbtn = document.getElementById("publicjoinbtn");
